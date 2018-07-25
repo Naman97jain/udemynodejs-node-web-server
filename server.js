@@ -1,9 +1,8 @@
 const express = require('express');
 const hbs = require('hbs');
-
+var fs = require('fs');
+const port = process.env.PORT || 3000;
 var app = express();
-
-app.use(express.static(__dirname + "/public"));
 
 hbs.registerPartials(__dirname + "/views/partials");
 hbs.registerHelper('getCurrentYear', () => {
@@ -12,6 +11,21 @@ hbs.registerHelper('getCurrentYear', () => {
 hbs.registerHelper('screamIt', (text) => {
   return text.toUpperCase();
 });
+app.use((req, res, next) => {
+  var now = new Date().toString();
+  var log = `${now}: ${req.method}: ${req.url}`;
+  console.log(log);
+  fs.appendFile('server.log', log + '\n', (err)=>{
+    if(err){
+      console.log('Unable to connect to server.js.');
+    }
+  });
+  next();
+});
+// app.use((req,res,next) => {
+//   res.render('maintenance.hbs');
+// });
+app.use(express.static(__dirname + "/public"));
 app.set('view engine','hbs');
 
 app.get('/',(req, res) => {
@@ -33,6 +47,6 @@ app.get('/bad', (req, res) => {
     errorMessage:"You have made a bad request"
   });
 });
-app.listen(3000, () => {
-  console.log("Server is up on port 3000");
+app.listen(port, () => {
+  console.log(`Server is up on port ${port}`);
 });
